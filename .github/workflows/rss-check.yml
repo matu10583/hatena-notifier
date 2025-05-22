@@ -1,0 +1,23 @@
+name: Notify Kusoblog on Slack
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # 毎5分
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install feedparser requests
+      - name: Run script
+        env:
+          RSS_URL: https://mattan21.hatenablog.com/rss
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python rss_to_slack.py
