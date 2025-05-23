@@ -37,7 +37,11 @@ jobs:
         env:
           TZ: Asia/Tokyo
       
+      - name: Set origin with token
+        run: git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
       - name: PushChanges
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
+          branch: master
