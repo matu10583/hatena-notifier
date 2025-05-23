@@ -1,6 +1,7 @@
 import feedparser
 import requests
 import os
+import datetime
 
 RSS_URL = os.environ["RSS_URL"]
 SLACK_WEBHOOK_URL = os.environ["SLACK_WEBHOOK_URL"]
@@ -11,23 +12,28 @@ if not feed.entries:
     print("No entries found.")
     exit()
 
-latest_entry = feed.entries[0]
-latest_url = latest_entry.link
-latest_title = latest_entry.title
 
-# 前回送信したURLを読み込む
+# 前回送信した時間を読み込む
+last_time = datetime.datetime.min
 if os.path.exists(STATE_FILE):
     with open(STATE_FILE, "r") as f:
-        last_url = f.read().strip()
-else:
-    last_url = ""
+        try:
+            last_time = datetime.datetime.fromisoformat(f.read().strip())
+        except Exception as e:
+            print("invalid time record. use min time")
+
+
 
 # 新しい投稿があれば通知
-if latest_url != last_url:
-    message = f"新規投稿だよ: *{latest_title}*\n{latest_url}"
+new_entries = [
+    entry for entry in feed.entries
+    if datetime.datetime(*entry.published_parsed[:6], tzinfo=datetime.timezone.utc)>last_time
+]
+for entry in reversed(new_entries):
+    message = f"新規投稿だよ: *{entry.title}*\n{entry.link}"
+    print(f"{entry.title}:{entry.link}")
     requests.post(SLACK_WEBHOOK_URL, json={"text": message})
 
-    with open(STATE_FILE, "w") as f:
-        f.write(latest_url)
-else:
-    print("No new posts.")
+now = datetime.datetime.now(datetime.timezone.utc)
+with open(STATE_FILE, "w") as f:
+    f.write(now.isoformat())
