@@ -32,7 +32,7 @@ new_entries = [
 for entry in reversed(new_entries):
     message = f"新規投稿だよ: *{entry.title}*\n{entry.link}"
     print(f"{entry.title}:{entry.link}")
-    requests.post(SLACK_WEBHOOK_URL, json={"text": message})
+    requests.post(SLACK_WEBHOOK_URL, json={"text": message, "unfurl_links": true})
 
 now = datetime.datetime.now(datetime.timezone.utc)
 with open(STATE_FILE, "w") as f:
